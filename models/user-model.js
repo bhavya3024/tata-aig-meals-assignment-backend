@@ -7,12 +7,13 @@ module.exports = {
       const { firstName, lastName, middleName, username, password } =
         userDetails;
       const result = await pool.query(
-        `INSERT INTO public.users(username, password, first_name, last_name ${middleName ? ', middle_name' : '' }) VALUES('${username.toLowerCase()}', '${bcrypt.hashSync(password, 10)}', '${firstName}', '${lastName}' '${
+        `INSERT INTO public.users(username, password, first_name, last_name ${middleName ? ', middle_name' : '' }) VALUES('${username.toLowerCase()}', '${bcrypt.hashSync(password, 10)}', '${firstName}', '${lastName}' ${
           middleName ? `, '${middleName}'` : ''
-        }')`
+        })`
       );
       return result;
     } catch (error) {
+      console.log(error);
       throw new Error("Error occurred creating user Details");
     }
   },
@@ -52,6 +53,7 @@ module.exports = {
         await pool.query(query);
       }
     } catch (error) {
+      console.log(error);
       throw new Error("Error occured modifying user Details");
     }
   },
@@ -62,14 +64,16 @@ module.exports = {
       );
       return rows;
     } catch (error) {
+      console.log(error);
       throw new Error("Error occured while getting user by id");
     }
   },
-  async getUserByUsername(username, password) {
+  async getUserByUsername(username, showPassword) {
     try {
-       const { rows } = await pool.query(`SELECT id, first_name, last_name, middle_name, username FROM public.users WHERE username = '${username}' ${password ? `AND password = '${bcrypt.hashSync(password, 10)}'`: ''}`);
+       const { rows } = await pool.query(`SELECT id, first_name, last_name, middle_name, username ${showPassword ? ', password' : ''} FROM public.users WHERE username = '${username}' `);
        return rows;
     } catch (error) {
+        console.log(error);
         throw new Error('Error occured while getting user details by username');
     }
   }

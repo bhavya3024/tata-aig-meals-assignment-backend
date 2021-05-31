@@ -6,7 +6,7 @@ module.exports = {
       const { name, calories, userId, scheduleTime } =
         mealDetails;
       const { rows } = await pool.query(
-        `INSERT INTO public.meals(name, calories, created_by, modified_by ${scheduleTime ? ', schedule_time' : ''}) VALUES('${name}', ${calories}, '${userId}', '${userId}' ${scheduleTime ?  `, ${scheduleTime}` : ''})`
+        `INSERT INTO public.meals(name, calories, created_by, modified_by ${scheduleTime ? ', schedule_time' : ''}) VALUES('${name}', ${calories}, '${userId}', '${userId}' ${scheduleTime ?  `, '${scheduleTime}'` : ''})`
       );
       return rows;
     } catch (error) {
@@ -34,18 +34,21 @@ module.exports = {
           query += `${hasUpdates ? ',' : ''} schedule_time = '${scheduleTime}'`;
       }
       if (hasUpdates) {
-          query += `, modified_on = '${new Date()}', modified_by = '${userId}'  WHERE id = ${mealId}`;
+          query += `, modified_on = '${new Date().toISOString()}', modified_by = '${userId}'  WHERE id = '${mealId}'`;
           await pool.query(query);
       }
     } catch (error) {
+      console.log('ERROR', error.message);
       throw new Error('Error occured modifying meal Details');
     }
   },
-  async getMealsByUserId(userId, mealId){
+  async getMealsByUserId(userId, date, mealId){
       try {
-         const { rows }  = await pool.query(`SELECT id, name, calories, created_on, modified_on FROM public.meals WHERE modified_by = '${userId}' ${mealId ? ` AND  id = '${mealId}'` : ''} `);
+         const { rows }  = await pool.query(`SELECT id, name, calories, created_on, modified_on, schedule_time FROM public.meals WHERE modified_by = '${userId}' ${date ? ` AND  cast(schedule_time as date) = '${date}'` : ''}
+         ${mealId ? ` AND id = '${mealId}'` : ''} `);
          return rows;
       } catch (error) {
+        console.log('ERROR', error);
         throw new Error('Error occured while getting meals by user id');
       }
   },

@@ -6,7 +6,8 @@
     "host": { "ENV": "DB_HOST" },
     "database": { "ENV": "DB_DATABASE" },
     "port": { "ENV": "DB_PORT" },
-    "schema": { "ENV": "DB_SCHEMA" }
+    "schema": { "ENV": "DB_SCHEMA" },
+    "ssl": { "ENV": "SSL" }
   },
   "sql-file": true
 }

@@ -1,4 +1,5 @@
 /* Replace with your SQL commands */
+
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE TABLE public.users(
     id uuid PRIMARY KEY  DEFAULT uuid_generate_v4(),

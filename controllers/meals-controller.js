@@ -4,6 +4,7 @@ const { verifyToken } = require('./middleware');
 const moment = require('moment');
 
 router.post('/', verifyToken, async (req, res) => {
+ try {
    const { name, calories, scheduleTime } = req.body;
    const { id: userId } = res.locals.userDetails;
    let errors = '';
@@ -11,9 +12,6 @@ router.post('/', verifyToken, async (req, res) => {
        errors +=  `name`;
    }
    if (!calories) {
-       errors += `${errors ? ', ' : ''}calories`;
-   }
-   if (!scheduleTime) {
        errors += `${errors ? ', ' : ''}calories`;
    }
    if (errors) {
@@ -25,7 +23,7 @@ router.post('/', verifyToken, async (req, res) => {
    if (calories < 0) {
        return res.status(400).send('Calories cannot be negative');
    }
-   if (!moment(scheduleTime).isValid()) {
+   if (scheduleTime && !moment(scheduleTime).isValid()) {
       return res.status(400).send('Schedule time is incorrect. Please enter in valid date format');
    }
    const meal = await Meals.insert({
@@ -35,13 +33,17 @@ router.post('/', verifyToken, async (req, res) => {
        scheduleTime
    });
    return res.json(meal);
+} catch (error) {
+    return res.status(500).send('Internal server Error!');
+}
 });
 
 router.patch('/:mealId', verifyToken, async (req, res) => {
+try {
     const { name, calories, scheduleTime } = req.body;
     const { mealId } = req.params;
     const { id: userId }  = res.locals.userDetails;
-    const mealDetails = await Meals.getMealsByUserId(userId, mealId);
+    const mealDetails = await Meals.getMealsByUserId(userId, null, mealId);
     if (!mealDetails || !mealDetails.length) {
        return res.status(400).send('Meal not found');
     }
@@ -60,19 +62,45 @@ router.patch('/:mealId', verifyToken, async (req, res) => {
         name,
         calories,
         scheduleTime,
+        userId,
     });
     return res.sendStatus(200);
+} catch(error) {
+    return res.status(500).send('Internal Server Error!');
+}
 });
 
 router.delete('/:mealId', verifyToken, async (req, res) => {
+ try {
     const { mealId } = req.params;
     const { id: userId }  = res.locals.userDetails;
-    const mealDetails = await Meals.getMealsByUserId(userId, mealId);
+    const mealDetails = await Meals.getMealsByUserId(userId, null, mealId);
     if (!mealDetails || !mealDetails.length) {
        return res.status(400).send('Meal not found');
     }
     await Meals.deleteById(mealId);
     return res.sendStatus(200);
+} catch (error) {
+    return res.status(500).send('Internal Server Error!');
+}
 });
+
+
+
+
+router.get('/', verifyToken, async (req, res) => {
+ try {
+    const { date } = req.query;
+    if (!moment().isValid(date)) {
+        return res.status(400).send('Invalid date format');
+    }
+    const { id: userId } = res.locals.userDetails;
+    const meals = await Meals.getMealsByUserId(userId, date);
+    return res.json(meals); 
+} catch (error) {
+    return res.status(500).send('Internal Server Error!');
+}
+});
+
 
 module.exports = router;
